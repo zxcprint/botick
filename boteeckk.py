@@ -15,12 +15,11 @@ from telegram.ext import (
 )
 
 # === НАСТРОЙКИ ===
-BOT_TOKEN = os.environ['BOT_TOKEN']  # токен берём из переменных окружения Railway
-ADMIN_ID = 509466119
+BOT_TOKEN = os.environ['BOT_TOKEN']           # токен бота из переменных окружения
+ADMIN_ID = int(os.environ['ADMIN_ID'])        # ID админа из переменных окружения
 
 PRICE_SINGLE = 8   # цена за страницу
 PRICE_DOUBLE = 9   # цена за лист (двусторонняя)
-
 USERS_FILE = "users.txt"
 
 # === ФУНКЦИИ ДЛЯ РАССЫЛКИ ===
