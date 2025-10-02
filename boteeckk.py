@@ -15,14 +15,13 @@ from telegram.ext import (
 )
 
 # === НАСТРОЙКИ ===
-BOT_TOKEN = "8410470590:AAF_kCe9xBdtdggZ6Jz1I9UNPaLT0PnhKPY"
+BOT_TOKEN = os.environ['BOT_TOKEN']  # токен берём из переменных окружения Railway
 ADMIN_ID = 509466119
 
 PRICE_SINGLE = 8   # цена за страницу
 PRICE_DOUBLE = 9   # цена за лист (двусторонняя)
 
 USERS_FILE = "users.txt"
-
 
 # === ФУНКЦИИ ДЛЯ РАССЫЛКИ ===
 def save_user(user_id):
@@ -40,10 +39,8 @@ def load_users():
     except FileNotFoundError:
         return []
 
-
 # === СОСТОЯНИЯ ===
 WAITING_FILE, SELECTING_MODE, ENTERING_RANGES, ENTERING_TOPICS, SELECTING_PRINT_TYPE, CONFIRMING = range(6)
-
 
 # === ПАРСИНГ ДИАПАЗОНОВ ===
 def parse_ranges(text):
@@ -65,12 +62,10 @@ def parse_ranges(text):
             total_pages += 1
     return ranges, total_pages
 
-
 # === ХЕНДЛЕРЫ ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     save_user(user_id)
-
     await update.message.reply_text(
         "Привет!!\n"
         "Я помогу рассчитать тебе стоимость печати, а Даше принять заказ и не запутаться💅\n\n"
@@ -78,7 +73,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "А сейчас прикрепи файлик сюда ⤵️"
     )
     return WAITING_FILE
-
 
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     document = update.message.document
@@ -98,26 +92,24 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return SELECTING_MODE
 
-
 async def mode_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     choice = update.message.text.strip().lower()
     if choice == "страницы":
         await update.message.reply_text("Укажи диапазон страниц (например: 1-5, 7, 10-12)")
         return ENTERING_RANGES
-    elif choice == "главы":
+    elif choice == "главы" or choice == "главы/темы":
         await update.message.reply_text("Напиши какие главы/темы нужно распечатать")
         return ENTERING_TOPICS
     else:
         await update.message.reply_text("Выбери кнопкой: Страницы или Главы")
         return SELECTING_MODE
 
-
 async def ranges_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_input = update.message.text.strip()
     try:
         ranges, total_pages = parse_ranges(user_input)
     except Exception:
-        await update.message.reply_text("Где-то опшипка( (примеры: 1-5, 7, 10-12")
+        await update.message.reply_text("Где-то опшипка( (примеры: 1-5, 7, 10-12)")
         return ENTERING_RANGES
 
     context.user_data["ranges"] = ranges
@@ -133,7 +125,6 @@ async def ranges_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Теперь выбери тип печати:", reply_markup=reply_markup)
     return SELECTING_PRINT_TYPE
 
-
 async def enter_topics(update: Update, context: ContextTypes.DEFAULT_TYPE):
     topics = update.message.text.strip()
     context.user_data["topics"] = topics
@@ -146,7 +137,6 @@ async def enter_topics(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=reply_markup
     )
     return CONFIRMING
-
 
 async def print_type_selected(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_choice = update.message.text.lower()
@@ -181,14 +171,13 @@ async def print_type_selected(update: Update, context: ContextTypes.DEFAULT_TYPE
     await update.message.reply_text(f"Итог:\n\n{details}\n\nПодтвердить заказ?", reply_markup=reply_markup)
     return CONFIRMING
 
-
 async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
     choice = update.message.text.strip().lower()
     file_id = context.user_data.get("file_id")
     file_name = context.user_data.get("file_name")
 
     if "подтвердить" in choice:
-        if "ranges" in context.user_data:  # заказ по страницам
+        if "ranges" in context.user_data:
             print_type = context.user_data.get("print_type")
             num_pages = context.user_data.get("total_pages")
             total_cost = context.user_data.get("total_cost")
@@ -208,7 +197,7 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
             )
 
-        elif "topics" in context.user_data:  # заказ по главам
+        elif "topics" in context.user_data:
             topics = context.user_data.get("topics")
 
             await context.bot.send_document(
@@ -231,13 +220,10 @@ async def confirm_order(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     return ConversationHandler.END
 
-
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Галя отмена!!", reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
-
-# === РАССЫЛКА ===
 async def post(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text("Это только для админки(( 🚫")
@@ -260,11 +246,10 @@ async def post(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f"Рассылка завершена ✅\nУспешно: {sent}\nНе доставлено: {failed}")
 
-
 # === MAIN ===
 def main():
     logging.basicConfig(level=logging.INFO)
-    app = Application.builder().token(TOKEN).build()
+    app = Application.builder().token(BOT_TOKEN).build()
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
@@ -286,6 +271,6 @@ def main():
     print("МАШИНА ЗАПУЩЕНА...")
     app.run_polling()
 
-
 if __name__ == "__main__":
     main()
+
