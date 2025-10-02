@@ -15,7 +15,7 @@ from telegram.ext import (
 )
 
 # === НАСТРОЙКИ ===
-TOKEN = "8410470590:AAF_kCe9xBdtdggZ6Jz1I9UNPaLT0PnhKPY"
+BOT_TOKEN = "8410470590:AAF_kCe9xBdtdggZ6Jz1I9UNPaLT0PnhKPY"
 ADMIN_ID = 509466119
 
 PRICE_SINGLE = 8   # цена за страницу
